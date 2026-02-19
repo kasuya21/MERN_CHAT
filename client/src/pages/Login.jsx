@@ -1,115 +1,119 @@
-import React, { useState } from "react";
-import { MessageSquare, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router";
-
-// Import Components ที่ต้องใช้ในหน้านี้
-import Navbar from "../components/Navbar";
+import  useAuthStore from "../store/useAuthStore";
+import { Loader, Eye, EyeOff, Mail, Lock } from "lucide-react"; // แถม Icon ให้ครับ\
 import CommunityPanel from "../components/CommunityPanel";
 
-const LoginPage = () => {
+const Login = () => {
+  // แก้ไขตรงนี้: ปกติ Zustand จะใช้ destructuring จาก function
+  const { signIn, isSigningIn } = useAuthStore();
+
   const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  // ฟังก์ชันอัปเดต State แบบ Dynamic
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // กันหน้าเว็บ Refresh
+    signIn(formData);
+  };
 
   return (
-    // 1. Container หลัก: คุมทั้งหน้าจอ
-    <div
-      className="min-h-screen flex bg-[#0f1216] font-sans relative overflow-hidden"
-      data-theme="business"
-    >
-      {/* 2. Navbar: วางลอยอยู่ด้านบนสุดของหน้านี้ */}
-      <Navbar />
-
-      {/* 3. ส่วนเนื้อหา (แบ่งซ้าย-ขวา) */}
-
-      {/* --- LEFT SIDE: Login Form --- */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 relative z-0">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md mt-16 lg:mt-0"
-        >
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gray-800 mb-4 text-orange-500">
-              <MessageSquare size={24} />
+    <div className="min-h-screen flex flex-col lg:flex-row font-sans relative">
+      <div className="flex-1 flex flex-col justify-center items-center p-6 bg-[#181c23] pt-24 lg:pt-6">
+        <div className="w-full max-w-sm">
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-12 h-12 bg-[#ff7b5c]/10 flex items-center justify-center rounded-2xl mb-5 shadow-sm">
+              <Lock className="w-6 h-6 text-[#ff7b5c]" />
             </div>
-            <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-            <p className="text-gray-500">Sign in to your account</p>
+            <h1 className="text-2xl font-semibold text-white mb-1.5">
+              Welcome Back
+            </h1>
+            <p className="text-sm text-slate-400">Sign in to your account</p>
           </div>
 
-          {/* Form Inputs */}
-          <form className="space-y-5">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text text-gray-400 font-semibold">
-                  Email
-                </span>
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            {/* อีเมล */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Email
               </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  <Mail size={18} />
-                </div>
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  className="input input-bordered bg-[#1a1d23] border-gray-700 text-white w-full pl-10 focus:border-orange-500"
-                />
-              </div>
+              <input
+                type="email"
+                name="email" // ต้องมี name ให้ตรงกับ key ใน state
+                value={formData.email} // ยัด value เข้าไป
+                onChange={handleChange} // ดักจับการพิมพ์
+                placeholder="you@example.com"
+                className="w-full bg-[#1e232b] border border-white/5 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#ff7b5c] focus:ring-1 focus:ring-[#ff7b5c] transition-colors"
+                required
+              />
             </div>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text text-gray-400 font-semibold">
-                  Password
-                </span>
+            {/* รหัสผ่าน */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Password
               </label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  <Lock size={18} />
-                </div>
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password" // ต้องมี name ให้ตรงกับ key ใน state
+                  value={formData.password} // ยัด value เข้าไป
+                  onChange={handleChange} // ดักจับการพิมพ์
                   placeholder="••••••••"
-                  className="input input-bordered bg-[#1a1d23] border-gray-700 text-white w-full pl-10 pr-10 focus:border-orange-500"
+                  className="w-full bg-[#1e232b] border border-white/5 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#ff7b5c] focus:ring-1 focus:ring-[#ff7b5c] transition-colors"
+                  required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
-              <label className="label">
-                <span className="label-text-alt"></span>
-                <a
-                  href="#"
-                  className="label-text-alt link link-hover text-gray-500"
-                >
-                  Forgot password?
-                </a>
-              </label>
             </div>
 
-            <button className="btn w-full bg-[#ff7a50] hover:bg-[#e66a40] text-black border-none font-bold mt-4">
-              Sign In
+            <button
+              disabled={isSigningIn}
+              type="submit"
+              className="w-full bg-[#ff7b5c] hover:bg-[#ff6a47] text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+            >
+              {isSigningIn ? (
+                <>
+                  <Loader className="h-5 w-5 animate-spin" />
+                  <span>Logging in...</span>
+                </>
+              ) : (
+                "Sign In"
+              )}
             </button>
           </form>
 
-          {/* Footer */}
-          <div className="text-center mt-6">
-            <p className="text-gray-500">
-              Don't have an account?{" "}
-              <Link
-                to="/register"
-                className="text-[#ff7a50] hover:underline font-medium"
-              >
-                Create account
-              </Link>
-            </p>
-          </div>
-        </motion.div>
+          <p className="text-center text-sm text-slate-400 mt-8">
+            Don't have an account?{" "}
+            <a
+              href="/register"
+              className="text-[#ff7b5c] hover:underline font-medium ml-1"
+            >
+              Create account
+            </a>
+          </p>
+        </div>
       </div>
 
       {/* --- RIGHT SIDE: Community Panel --- */}
@@ -119,4 +123,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default Login;

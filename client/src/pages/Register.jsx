@@ -1,25 +1,60 @@
 import React, { useState } from "react";
 import { MessageSquare, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import useAuthStore from "../store/useAuthStore";
 
-// Import Components
 import Navbar from "../components/Navbar";
 import CommunityPanel from "../components/CommunityPanel";
 
-const SignUpPage = () => {
+const RegisterPage = () => {
+  const { signUp, isSigningUp } = useAuthStore();
+
+  const [formData, setFormData] = useState({
+    fullname: "",
+    email: "",
+    password: "",
+  });
+
   const [showPassword, setShowPassword] = useState(false);
 
+  const validationForm = () => {
+    if (!formData.fullname.trim()) return toast.error("Full Name is required");
+
+    if (!formData.email.trim()) return toast.error("Email is required");
+
+    if (!/^\S+@\S+\.\S+$/.test(formData.email))
+      return toast.error("Invalid email format");
+
+    if (!formData.password) return toast.error("Password is required");
+
+    if (formData.password.length < 6)
+      return toast.error("Password must be at least 6 characters");
+
+    return true;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const success = validationForm();
+    if (success === true) {
+      signUp(formData);
+    }
+  };
+
   return (
-    <div
-      className="min-h-screen flex bg-[#0f1216] font-sans relative overflow-hidden"
-      data-theme="business"
-    >
-      {/* 1. Navbar */}
+    <div className="min-h-screen flex bg-[#0f1216] font-sans relative overflow-hidden">
       <Navbar />
 
-      {/* 2. Main Layout */}
-      {/* --- LEFT SIDE: Register Form --- */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 relative z-0">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -39,20 +74,22 @@ const SignUpPage = () => {
           </div>
 
           {/* Form */}
-          <form className="space-y-5">
-            {/* Full Name (เพิ่มมาใหม่สำหรับหน้า Register) */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text text-gray-400 font-semibold">
-                  Full Name
-                </span>
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            {/* Full Name */}
+            <div>
+              <label className="block text-gray-400 font-semibold mb-2">
+                Full Name
               </label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  <User size={18} />
-                </div>
+                <User
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                />
                 <input
                   type="text"
+                  name="fullname"
+                  value={formData.fullname}
+                  onChange={handleChange}
                   placeholder="John Doe"
                   className="input input-bordered bg-[#1a1d23] border-gray-700 text-white w-full pl-10 focus:border-orange-500 transition-all"
                 />
@@ -60,18 +97,20 @@ const SignUpPage = () => {
             </div>
 
             {/* Email */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text text-gray-400 font-semibold">
-                  Email
-                </span>
+            <div>
+              <label className="block text-gray-400 font-semibold mb-2">
+                Email
               </label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  <Mail size={18} />
-                </div>
+                <Mail
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                />
                 <input
                   type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
                   placeholder="you@example.com"
                   className="input input-bordered bg-[#1a1d23] border-gray-700 text-white w-full pl-10 focus:border-orange-500 transition-all"
                 />
@@ -79,24 +118,26 @@ const SignUpPage = () => {
             </div>
 
             {/* Password */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text text-gray-400 font-semibold">
-                  Password
-                </span>
+            <div>
+              <label className="block text-gray-400 font-semibold mb-2">
+                Password
               </label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                  <Lock size={18} />
-                </div>
+                <Lock
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                />
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
                   placeholder="••••••••"
                   className="input input-bordered bg-[#1a1d23] border-gray-700 text-white w-full pl-10 pr-10 focus:border-orange-500 transition-all"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowPassword((prev) => !prev)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -104,9 +145,13 @@ const SignUpPage = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
-            <button className="btn w-full bg-[#ff7a50] hover:bg-[#e66a40] text-black border-none font-bold mt-4 shadow-lg shadow-orange-500/20">
-              Create Account
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={isSigningUp}
+              className="btn w-full bg-[#ff7a50] hover:bg-[#e66a40] text-black border-none font-bold mt-4 shadow-lg shadow-orange-500/20 disabled:opacity-60"
+            >
+              {isSigningUp ? "Creating..." : "Create Account"}
             </button>
           </form>
 
@@ -125,10 +170,9 @@ const SignUpPage = () => {
         </motion.div>
       </div>
 
-      {/* --- RIGHT SIDE: Community Panel --- */}
       <CommunityPanel />
     </div>
   );
 };
 
-export default SignUpPage;
+export default RegisterPage;

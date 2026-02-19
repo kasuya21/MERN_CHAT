@@ -7,7 +7,7 @@ const secret = process.env.SECRET;
 const node_mode = process.env.node_mode;
 
 exports.register = async (req, res) => {
-  const { fullname, email, password } = req.body;
+  const { fullname, email, password, profilePic } = req.body;
   if (!fullname || !email || !password) {
     return res.status(400).send({
       message: "Please Provide All Required!",
@@ -27,6 +27,7 @@ exports.register = async (req, res) => {
       fullname,
       email,
       password: hashedPassword,
+      profilePic,
     });
     //Auto login after registration
     jwt.sign(
@@ -48,8 +49,9 @@ exports.register = async (req, res) => {
         res.status(201).send({
           message: "User registered and logged in successfully!",
           id: user._id,
+          fullname,
           email,
-          accessToken: token,
+          profilePic,
         });
       },
     );
@@ -235,7 +237,7 @@ exports.updateProfile = async (req, res) => {
       userId,
       updateData,
       { new: true }, // ให้ return ข้อมูลใหม่ที่อัปเดตแล้วกลับมา
-    );
+    ).select("-password");
 
     if (!updatedUser) {
       return res
@@ -251,6 +253,16 @@ exports.updateProfile = async (req, res) => {
   } catch (error) {
     console.error("Update Profile Error: ", error); // พิมพ์ Error ออกมาดูด้วยเผื่อแก้บั๊ก
     return res
+      .status(500)
+      .json({ message: "Internal Server Error while updating user profile" });
+  }
+};
+
+exports.checkAuth = async (req, res) => {
+  try {
+    res.status(200).json(req.user);
+  } catch (error) {
+    res
       .status(500)
       .json({ message: "Internal Server Error while updating user profile" });
   }

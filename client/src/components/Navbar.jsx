@@ -14,41 +14,39 @@ const Navbar = () => {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Left Side: Logo */}
         <div className="flex items-center gap-8">
-          <Link
-            to="/"
+          <a
+            href="/"
             className="flex items-center gap-2.5 hover:opacity-80 transition-all"
           >
             <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center">
               <MessageSquare className="w-5 h-5 text-primary" />
             </div>
             <h1 className="text-lg font-bold">SE Chat</h1>
-          </Link>
+          </a>
         </div>
 
         {/* Right Side: Actions */}
         <div className="flex items-center gap-2">
-          {/* ปุ่ม Settings (มีกรอบตามรูป) */}
-          <Link to="/settings" className="btn btn-sm gap-2 transition-colors">
+          {/* ปุ่ม Settings */}
+          <a href="/settings" className="btn btn-sm gap-2 transition-colors">
             <Settings className="w-4 h-4" />
             <span className="hidden sm:inline">Settings</span>
-          </Link>
+          </a>
 
           {/* แสดงปุ่ม Profile และ Logout เฉพาะตอน Login แล้ว */}
-          {(
-            <>
-              {/* ปุ่ม Profile (ไม่มีกรอบ) */}
-              <Link to="/profile" className="btn btn-sm btn-ghost gap-2">
-                <User className="size-5" />
-                <span className="hidden sm:inline">Profile</span>
-              </Link>
+          <>
+            {/* ปุ่ม Profile */}
+            <a href="/profile" className="btn btn-sm btn-ghost gap-2">
+              <User className="size-5" />
+              <span className="hidden sm:inline">Profile</span>
+            </a>
 
-              {/* ปุ่ม Logout (ไม่มีกรอบ) */}
-              <button className="flex gap-2 items-center"
-                <LogOut className="size-5"> />
-                <span className="hidden sm:inline">Logout</span>
-              </button>
-            </>
-          )}
+            {/* ปุ่ม Logout */}
+            <button className="btn btn-sm btn-ghost gap-2 flex items-center">
+              <LogOut className="size-5" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </>
         </div>
       </div>
     </header>
