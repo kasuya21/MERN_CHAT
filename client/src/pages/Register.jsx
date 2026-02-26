@@ -19,6 +19,7 @@ const RegisterPage = () => {
 
   const [showPassword, setShowPassword] = useState(false);
 
+
   const validationForm = () => {
     if (!formData.fullname.trim()) return toast.error("Full Name is required");
 

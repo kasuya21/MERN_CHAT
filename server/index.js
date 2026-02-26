@@ -3,8 +3,9 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
-const app = express();
+
 dotenv.config();
+const {app, server} = require("./lib/socket")
 
 // routers
 const userRouter = require("./routers/user.router");
@@ -43,4 +44,4 @@ if (!DB_URL) {
 
 app.use("/api/v1/user", userRouter);
 
-app.listen(PORT, () => console.log(`Server is running port ${PORT}`));
+server.listen(PORT, () => console.log(`Server is running port ${PORT}`)); //คอยรับฟังสัญญาณต่างๆ

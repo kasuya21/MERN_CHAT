@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import  useAuthStore from "../store/useAuthStore";
 import { Loader, Eye, EyeOff, Mail, Lock } from "lucide-react"; // แถม Icon ให้ครับ\
 import CommunityPanel from "../components/CommunityPanel";
+import { useNavigate } from "react-router";
 
 const Login = () => {
   // แก้ไขตรงนี้: ปกติ Zustand จะใช้ destructuring จาก function
@@ -14,6 +15,7 @@ const Login = () => {
     password: "",
   });
 
+  const navigate = useNavigate()
   // ฟังก์ชันอัปเดต State แบบ Dynamic
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,6 +28,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault(); // กันหน้าเว็บ Refresh
     signIn(formData);
+    navigate("/")
   };
 
   return (

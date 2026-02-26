@@ -1,34 +1,66 @@
 const MessageModel = require("../models/Message");
+const User = require("../models/User");
+const cloudinary = require("../configs/cloudinary");
 
-const getMessages = async (req, res) => {
+const { getReceiverSocketId, io } = require("../lib/socket");
+
+exports.getUsersForSidebar = async (req, res) => {
   try {
-    const { room } = req.params;
-    const messages = await MessageModel.find({ room })
-      .sort({ createdAt: 1 })
-      .limit(100);
-
-    res.json(messages);
+    const loggedInUserId = req.user._id;
+    const filteredUsers = await User.find({
+      _id: { $ne: loggedInUserId },
+    }).select("-password");
+    res.status(200).json(filteredUsers);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal Server Error while getting users info" });
   }
 };
 
-const markAsRead = async (req, res) => {
+exports.getMessage = async (req, res) => {
   try {
-    const { room } = req.params;
-    await MessageModel.updateMany(
-      { room, read: false },
-      { $set: { read: true } },
-    );
-    res.json({ message: "Messages marked as read" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    const myId = req.user._id;
+    const {id:userToChat} = req.params;
+    const message = await MessageModel.find({
+      $or:[
+        {
+          sender:myId,
+          recipient: userToChat,
+        },
+        {
+          sender: userToChat,
+          recipient: myId
+        }
+      ]
+    })
+    res.json(message)
+  } catch (error){
+    res.status(500).json({message})
   }
 };
-
-module.exports = {
-  getMessages,
-  markAsRead,
-};
+exports.setMessage = async (req,res) => {
+  try {
+    const {id: recipient} = req.params
+    if (!recipient){
+      return res.status(400).json({message})
+    }
+    const senderId = req.user._id
+    const {text,file}=req.body
+    let fileUrl=""
+    if(file){
+      const uploadResponse = await cloudinary.uploader.upload(file);
+      fileUrl = uploadResponse.secure_url;
+    }
+    const newMessage = await MessageModel({
+      senderId,
+      recipientId: recipient, 
+      text,
+      file: fileUrl
+    });
+    await newMessage.save()
+    res.send(newMessage)
+  } catch (error) {
+    res.status(500).json({message: error.message})
+  }
+}
