@@ -21,46 +21,52 @@ exports.getUsersForSidebar = async (req, res) => {
 exports.getMessage = async (req, res) => {
   try {
     const myId = req.user._id;
-    const {id:userToChat} = req.params;
-    const message = await MessageModel.find({
-      $or:[
+    const { id: userToChat } = req.params;
+    const messages = await MessageModel.find({
+      $or: [
         {
-          sender:myId,
-          recipient: userToChat,
+          senderId: myId,
+          recipientId: userToChat,
         },
         {
-          sender: userToChat,
-          recipient: myId
-        }
-      ]
-    })
-    res.json(message)
-  } catch (error){
-    res.status(500).json({message})
+          senderId: userToChat,
+          recipientId: myId,
+        },
+      ],
+    });
+    res.json(messages);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal Server Error while getting message" });
   }
 };
-exports.setMessage = async (req,res) => {
+
+exports.sendMessage = async (req, res) => {
   try {
-    const {id: recipient} = req.params
-    if (!recipient){
-      return res.status(400).json({message})
+    const { id: recipientId } = req.params;
+    if (!recipientId) {
+      return res.status(400).jsn({ message: "Reciient Id is missing" });
     }
-    const senderId = req.user._id
-    const {text,file}=req.body
-    let fileUrl=""
-    if(file){
+    const senderId = req.user._id;
+    const { text, file } = req.body;
+    let fileUrl = "";
+    if (file) {
       const uploadResponse = await cloudinary.uploader.upload(file);
       fileUrl = uploadResponse.secure_url;
     }
-    const newMessage = await MessageModel({
+    const newMessage = await new MessageModel({
       senderId,
-      recipientId: recipient, 
+      recipientId,
       text,
-      file: fileUrl
+      file: fileUrl,
     });
-    await newMessage.save()
-    res.send(newMessage)
+
+    await newMessage.save();
+    res.json({ message: newMessage });
   } catch (error) {
-    res.status(500).json({message: error.message})
+    res
+      .status(500)
+      .json({ message: "Internal Server Error while sending message" });
   }
-}
+};

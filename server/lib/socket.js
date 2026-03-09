@@ -1,12 +1,12 @@
 require("dotenv").config();
 const app = require("express")();
+const userSocketMap = []; // {userId:socketId}
 const server = require("http").createServer(app);
-const io = require("socket.io")(server,{
-    cors:{
-        origin:[process.env.CLIENT_URL],
-    }
+const io = require("socket.io")(server, {
+  cors: {
+    origin: [process.env.CLIENT_URL],
+  },
 });
-const userSocketMap = {}; // {userId:socketId}
 
 // หน้าบ้านรู้จัก userID
 // หลังบ้านรู้จัก socketId
@@ -22,9 +22,15 @@ io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
   const userId = socket.handshake.query.userId;
   //   เราจะจับคู่
-  if (userId) {
+  //   if (userId) {
+  //     userSocketMap[userId] = socket.id;
+  //     console.log("UserSocketMap", userSocketMap);
+  //   }
+  if (userId && userId !== "undefined") {
     userSocketMap[userId] = socket.id;
-    console.log("UserSocketMap", userSocketMap);
+    console.log("✅ UserSocketMap updated:", userSocketMap);
+  } else {
+    console.log("❌ Failed to map: userId is missing or undefined");
   }
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
@@ -35,4 +41,4 @@ io.on("connection", (socket) => {
   });
 });
 
-module.exports = { io, app, server };
+module.exports = { io, app, server, getReceiverSocketId };

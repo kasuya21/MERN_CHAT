@@ -1,31 +1,45 @@
-import React from "react";
-import { createBrowserRouter } from "react-router";
+import React, { useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
-import ProtectedRoute from "../components/ProtectedRoute";
+import { useAuthStore } from "../store/useAuthStore";
+import { Loader } from "lucide-react";
 import Profile from "../pages/Profile";
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: (
-      <ProtectedRoute>
-        <Home />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/register",
-    element: <Register />,
-  },
-  {
-    path:"/profile",
-    element: <Profile />,
-  }
-]);
 
-export default router;
+const Router = () => {
+  const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  if (isCheckingAuth && !authUser) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader className="size-10 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route
+          path="/login"
+          element={!authUser ? <Login /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/register"
+          element={!authUser ? <Register /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/profile"
+          element={authUser ? <Profile /> : <Navigate to="/login" />}
+        />
+      </Routes>
+    </div>
+  );
+};
+
+export default Router;

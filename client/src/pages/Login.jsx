@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import  useAuthStore from "../store/useAuthStore";
-import { Loader, Eye, EyeOff, Mail, Lock } from "lucide-react"; // แถม Icon ให้ครับ\
-import CommunityPanel from "../components/CommunityPanel";
-import { useNavigate } from "react-router";
+import { useAuthStore } from "../store/useAuthStore";
+import { Loader, Eye, EyeOff, Mail, Lock } from "lucide-react"; // แถม Icon ให้ครับ
+import toast from "react-hot-toast";
 
 const Login = () => {
   // แก้ไขตรงนี้: ปกติ Zustand จะใช้ destructuring จาก function
-  const { signIn, isSigningIn } = useAuthStore();
+  const { login, isLoggingIn } = useAuthStore();
 
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -15,7 +14,6 @@ const Login = () => {
     password: "",
   });
 
-  const navigate = useNavigate()
   // ฟังก์ชันอัปเดต State แบบ Dynamic
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,8 +25,8 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // กันหน้าเว็บ Refresh
-    signIn(formData);
-    navigate("/")
+    login(formData);
+    /* The line `// toast.success("madiwa");` is a commented-out code in the `handleSubmit` function of the `Login` component. This line is currently not active because it is commented out using `//`, which means it will not be executed when the `handleSubmit` function is called. */
   };
 
   return (
@@ -44,7 +42,6 @@ const Login = () => {
             </h1>
             <p className="text-sm text-slate-400">Sign in to your account</p>
           </div>
-
           <form className="space-y-5" onSubmit={handleSubmit}>
             {/* อีเมล */}
             <div>
@@ -92,11 +89,11 @@ const Login = () => {
             </div>
 
             <button
-              disabled={isSigningIn}
+              disabled={isLoggingIn}
               type="submit"
               className="w-full bg-[#ff7b5c] hover:bg-[#ff6a47] text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70"
             >
-              {isSigningIn ? (
+              {isLoggingIn ? (
                 <>
                   <Loader className="h-5 w-5 animate-spin" />
                   <span>Logging in...</span>
@@ -119,9 +116,38 @@ const Login = () => {
         </div>
       </div>
 
-      {/* --- RIGHT SIDE: Community Panel --- */}
-      {/* วาง Component ตรงนี้เลย มันจะไปอยู่ด้านขวาอัตโนมัติเพราะ Flex */}
-      <CommunityPanel />
+      {/* --- ส่วน Animation ด้านขวาคงเดิม --- */}
+      <div className="hidden lg:flex flex-1 flex-col justify-center items-center bg-[#13161b] p-12">
+        <div className="grid grid-cols-3 gap-4 mb-14">
+          {[...Array(9)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="w-24 h-24 rounded-2xl shadow-sm"
+              animate={{
+                backgroundColor: [
+                  "#1a1d24",
+                  "rgba(255, 123, 92, 0.25)",
+                  "#1a1d24",
+                ],
+                scale: [1, 1.05, 1],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 0.2,
+              }}
+            />
+          ))}
+        </div>
+        <h2 className="text-2xl font-semibold text-white mb-4">
+          Welcome back!
+        </h2>
+        <p className="text-slate-400 text-center max-w-[320px] leading-relaxed">
+          Sign in to continue your conversations and catch up with your
+          messages.
+        </p>
+      </div>
     </div>
   );
 };

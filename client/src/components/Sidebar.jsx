@@ -1,75 +1,96 @@
-import { useState } from "react";
-import useAuthStore from "../store/useAuthStore";
+import React, { useEffect, useState } from "react";
+import { Users } from "lucide-react";
+import { useAuthStore } from "../store/useAuthStore";
+import { useChatStore } from "../store/useChatStore";
 
-const Sidebar = ({ users = [], isUsersLoading = false }) => {
+const Sidebar = () => {
+  const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+
   const { onlineUsers } = useAuthStore();
 
-  const [showOnlineOnly, setShowOnlineOnly] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const { users, getUsers, setSelectedUser, isUserLoading, selectedUser } =
+    useChatStore();
+
+  useEffect(() => {
+    getUsers();
+  }, [getUsers]);
 
   const filteredUsers = showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
     : users;
 
-  const onlineCount = onlineUsers.length;
-
-  if (isUsersLoading) {
-    return (
-      <div className="text-center text-gray-500 py-4">Loading contacts...</div>
-    );
-  }
-
   return (
-    <div className="w-72 border-r border-gray-800 flex flex-col p-5 bg-[#13161c]">
-      {/* Filter Toggle */}
-      <div className="mb-4 flex items-center justify-between">
-        <span className="text-sm text-gray-400">Show online only</span>
-        <input
-          type="checkbox"
-          checked={showOnlineOnly}
-          onChange={() => setShowOnlineOnly(!showOnlineOnly)}
-        />
+    <aside className="w-72 md:w-80 bg-[#181c23] border-r border-white/5 flex flex-col shrink-0">
+      <div className="p-5 border-b border-white/5">
+        <div className="flex items-center gap-2 text-slate-200 font-medium mb-4">
+          <Users className="w-5 h-5" />
+          Contacts
+        </div>
+
+        <label className="flex items-center gap-3 cursor-pointer group">
+          <div className="relative">
+            <input
+              type="checkbox"
+              className="sr-only"
+              checked={showOnlineOnly}
+              onChange={() => setShowOnlineOnly(!showOnlineOnly)}
+            />
+
+            <div
+              className={`block w-10 h-6 rounded-full transition-colors ${
+                showOnlineOnly ? "bg-[#ff7b5c]" : "bg-[#2a303c]"
+              }`}
+            ></div>
+
+            <div
+              className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                showOnlineOnly ? "translate-x-4" : "translate-x-0"
+              }`}
+            ></div>
+          </div>
+
+          <span className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">
+            Show online only
+            <span className="text-green-500">
+              ({onlineUsers.length} online)
+            </span>
+          </span>
+        </label>
       </div>
 
-      <div className="overflow-y-auto flex-1 w-full space-y-2">
-        {filteredUsers.map((user) => (
-          <button
-            key={user._id}
-            onClick={() => setSelectedUser(user)}
-            className={`w-full p-3 flex items-center gap-3 rounded-lg ${
-              selectedUser?._id === user._id
-                ? "bg-[#2b303b]"
-                : "hover:bg-[#1f232b]"
-            }`}
-          >
-            <div className="relative">
+      <div className="flex-1 overflow-y-auto">
+        {isUserLoading && (
+          <div className="text-center text-slate-500 mt-4">
+            Loading users...
+          </div>
+        )}
+
+        {!isUserLoading &&
+          filteredUsers.map((user) => (
+            <button
+              key={user._id}
+              onClick={() => setSelectedUser(user)}
+              className={`w-full p-3 flex items-center gap-3 hover:bg-[#232730] transition ${
+                selectedUser?._id === user._id ? "bg-[#232730]" : ""
+              }`}
+            >
               <img
                 src={user.profilePic || "/avatar.png"}
-                alt={user.fullName}
-                className="size-10 rounded-full"
+                className="w-10 h-10 rounded-full"
+                alt={user.fullname}
               />
 
-              {onlineUsers.includes(user._id) && (
-                <span className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full" />
-              )}
-            </div>
+              <div className="text-left">
+                <div className="text-sm font-medium">{user.fullname}</div>
 
-            <div className="text-left">
-              <div>{user.fullName}</div>
-              <div className="text-xs text-gray-400">
-                {onlineUsers.includes(user._id) ? "Online" : "Offline"}
+                <div className="text-xs text-slate-400">
+                  {onlineUsers.includes(user._id) ? "Online" : "Offline"}
+                </div>
               </div>
-            </div>
-          </button>
-        ))}
+            </button>
+          ))}
       </div>
-
-      {/* ✅ จำนวนคนออนไลน์ */}
-      <div className="pt-4 border-t border-gray-700 text-sm text-gray-400 text-center">
-        Online users:{" "}
-        <span className="text-green-400 font-semibold">{onlineCount}</span>
-      </div>
-    </div>
+    </aside>
   );
 };
 

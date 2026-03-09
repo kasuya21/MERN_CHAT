@@ -3,12 +3,12 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
-
 dotenv.config();
-const {app, server} = require("./lib/socket")
+const { app, server } = require("./lib/socket");
 
 // routers
 const userRouter = require("./routers/user.router");
+const messageRouter = require("./routers/message.router");
 
 const PORT = process.env.PORT;
 const corsOrigins = process.env.CLIENT_URL;
@@ -21,8 +21,8 @@ app.use(
   }),
 );
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -43,5 +43,7 @@ if (!DB_URL) {
 }
 
 app.use("/api/v1/user", userRouter);
+app.use("/api/v1/message", messageRouter);
 
-server.listen(PORT, () => console.log(`Server is running port ${PORT}`)); //คอยรับฟังสัญญาณต่างๆ
+// คอยรับฟังสัญญาณ
+server.listen(PORT, () => console.log(`Server is running port ${PORT}`));

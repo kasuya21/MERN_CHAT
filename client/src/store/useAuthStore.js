@@ -6,7 +6,7 @@ import { io } from "socket.io-client";
 // useAuthStore เป็น react hook
 // มี func set get มันจะประกาศ attibute ต่างๆ ที่แชร์กัน
 // useAuthStore ไว้ใช้สำหรับจัดการ auth อย่างเดียว
-const useAuthStore = create((set, get) => ({
+export const useAuthStore = create((set, get) => ({
   // อันนี้เรากำหนด state ไว้แชร์กัน
   //   มีใคร login อยู่
   authUser: null,
@@ -27,6 +27,7 @@ const useAuthStore = create((set, get) => ({
       // เรียกใช้ api
       const response = await api.get("/user/check");
       set({ authUser: response.data });
+      get().connectSocket();
     } catch (error) {
       console.log("Error in CheckAuth", error);
       set({ authUser: null });
@@ -49,13 +50,12 @@ const useAuthStore = create((set, get) => ({
       set({ isSigningUp: false });
     }
   },
-  signIn: async (data) => {
+  login: async (data) => {
     set({ isLoggingIn: true });
     try {
       const response = await api.post("/user/login", data);
       set({ authUser: response.data });
       get().connectSocket();
-      console.log("LOGIN RESPONSE:", response.data);
       toast.success("Logged in successfully");
     } catch (error) {
       toast.error(error.response.data.message || "Log in failed");
@@ -87,18 +87,27 @@ const useAuthStore = create((set, get) => ({
   },
   connectSocket: () => {
     const { authUser, socket } = get();
-    // ถ้าไม่มี user หรือ socket connected อยู่แล้ว เราจะไม่ทำ
+
+    // 1. เช็คก่อนเลยว่าถ้ามี socket เชื่อมต่ออยู่แล้วให้หยุดทำ
     if (!authUser || socket?.connected) return;
+
     const socketURL = import.meta.env.VITE_SOCKET_URL;
-    // io() linkไปหลังบ้าน
+
+    // 2. สร้าง instance ใหม่พร้อม query
     const newSocket = io(socketURL, {
       query: {
-        userId: authUser.id,
+        userId: authUser._id || authUser.id, // ใช้รองรับทั้ง _id และ id
       },
+      // เพิ่มบรรทัดนี้เพื่อให้แน่ใจว่ามันจะไม่ไปใช้ connection เก่าที่อาจจะค้างอยู่
+      forceNew: true,
     });
-    newSocket.connect();
+
+    // 3. จัดการสถานะ
     set({ socket: newSocket });
+
+    // 4. รอรับ event จาก server
     newSocket.on("getOnlineUsers", (userIds) => {
+      console.log("Online users received:", userIds); // เพิ่ม log เช็คฝั่งหน้าบ้าน
       set({ onlineUsers: userIds });
     });
   },
@@ -109,5 +118,3 @@ const useAuthStore = create((set, get) => ({
     }
   },
 }));
-
-export default useAuthStore

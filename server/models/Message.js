@@ -1,15 +1,15 @@
 const mongoose = require("mongoose");
+const { Schema, model } = mongoose;
 
-const messageSchema = new mongoose.Schema(
+const messageSchema = Schema(
   {
+    text: { type: String },
+    file: { type: String },
     senderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    recipientId: { type: mongoose.Schema.Types.ObjectId , ref:"User" },
-    text: { type: String},
-    file: { type: String},
-    
+    recipientId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true },
 );

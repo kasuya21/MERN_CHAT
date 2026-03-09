@@ -1,23 +1,16 @@
-import React, { useEffect } from "react";
-import { RouterProvider } from "react-router";
-import router from "./routes/Router";
+import { BrowserRouter } from "react-router";
+import Router from "./routes/Router";
 import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import useAuthStore from "./store/useAuthStore";
-
+import { Toaster } from "react-hot-toast";
 
 const App = () => {
-  const { checkAuth, isCheckingAuth, authUser } = useAuthStore();
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
-  
   return (
     <div>
-      <Navbar />
-      <RouterProvider router={router} />
-      <Footer />
+      <BrowserRouter>
+        <Navbar />
+        <Router />
+        <Toaster />
+      </BrowserRouter>
     </div>
   );
 };
