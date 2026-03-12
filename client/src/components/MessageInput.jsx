@@ -1,7 +1,7 @@
-import { useRef, useState } from "react";
+import { useState, useRef } from "react";
+import { Send, Image } from "lucide-react";
 import { useChatStore } from "../store/useChatStore";
-import { Image, Send, X } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 const MessageInput = () => {
   const [text, setText] = useState("");
@@ -9,106 +9,109 @@ const MessageInput = () => {
   const fileInputRef = useRef(null);
   const { sendMessage } = useChatStore();
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be less than 5MB");
+      return;
+    }
+
+    // Convert to base64
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
+    reader.onload = (event) => {
+      setImagePreview(event.target?.result);
     };
     reader.readAsDataURL(file);
   };
 
-  const removeImage = () => {
-    setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleSendMessage = async (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
+
     if (!text.trim() && !imagePreview) return;
 
-    try {
-      await sendMessage({
-        text: text.trim(),
-        image: imagePreview,
-      });
-
-      // Clear form
-      setText("");
-      setImagePreview(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (error) {
-      console.error("Failed to send message:", error);
+    await sendMessage({ text, file: imagePreview });
+    setText("");
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
   return (
-    <div className="p-4 w-full pt-2">
-      {/* Image Preview Area */}
+    <form
+      onSubmit={handleSend}
+      className="p-3 border-t border-gray-800 bg-[#0f1216]"
+    >
+      {/* Image Preview */}
       {imagePreview && (
-        <div className="mb-3 flex items-center gap-2">
-          <div className="relative">
-            <img
-              src={imagePreview}
-              alt="Preview"
-              className="w-20 h-20 object-cover rounded-lg border border-zinc-700"
-            />
-            <button
-              onClick={removeImage}
-              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center border border-gray-600 hover:bg-gray-700"
-              type="button"
-            >
-              <X className="size-3 text-white" />
-            </button>
-          </div>
+        <div className="mb-2 relative inline-block">
+          <img
+            src={imagePreview}
+            alt="preview"
+            className="h-20 w-20 object-cover rounded-lg"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              setImagePreview(null);
+              if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+              }
+            }}
+            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+          >
+            ✕
+          </button>
         </div>
       )}
 
-      {/* Input Form */}
-      <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-        <div className="flex-1 flex gap-2">
-          {/* Text Input */}
-          <input
-            type="text"
-            className="w-full input input-bordered rounded-lg input-sm sm:input-md bg-[#1a1d23] border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
-            placeholder="Type a message..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
+      <div className="flex items-center gap-2 bg-[#1a1f26] rounded-xl px-3 py-2 shadow-inner">
+        {/* Hidden File Input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageSelect}
+          className="hidden"
+        />
 
-          {/* File Input (Hidden) */}
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            ref={fileInputRef}
-            onChange={handleImageChange}
-          />
+        {/* Image Button */}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="p-2 rounded-lg hover:bg-[#262c36] transition"
+        >
+          <Image size={20} className="text-gray-400" />
+        </button>
 
-          {/* Image Button */}
-          <button
-            type="button"
-            className={`hidden sm:flex btn btn-circle btn-sm sm:btn-md text-gray-400 hover:text-orange-500 bg-transparent border-none ${imagePreview ? "text-emerald-500" : ""}`}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Image size={20} />
-          </button>
-        </div>
+        {/* Input */}
+        <input
+          type="text"
+          placeholder="Type a message..."
+          className="flex-1 bg-transparent outline-none text-white placeholder-gray-400"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
 
         {/* Send Button */}
         <button
           type="submit"
-          className="btn btn-sm sm:btn-md btn-circle bg-[#ff7a50] hover:bg-[#e66a40] border-none text-black disabled:bg-gray-700 disabled:text-gray-500"
-          disabled={!text.trim() && !imagePreview}
+          className="p-2 rounded-lg bg-linear-to-r from-orange-500 to-pink-500 hover:opacity-90 transition"
         >
-          <Send size={18} />
+          <Send size={18} className="text-white" />
         </button>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 };
+
 export default MessageInput;

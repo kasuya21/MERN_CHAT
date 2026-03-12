@@ -46,7 +46,7 @@ exports.sendMessage = async (req, res) => {
   try {
     const { id: recipientId } = req.params;
     if (!recipientId) {
-      return res.status(400).jsn({ message: "Reciient Id is missing" });
+      return res.status(400).json({ message: "Recipient Id is missing" });
     }
     const senderId = req.user._id;
     const { text, file } = req.body;
@@ -63,10 +63,51 @@ exports.sendMessage = async (req, res) => {
     });
 
     await newMessage.save();
-    res.json({ message: newMessage });
+
+    // Send signal to recipient via socket
+    const receiverSocketId = getReceiverSocketId(recipientId.toString());
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", newMessage);
+    }
+
+    res.json(newMessage);
   } catch (error) {
     res
       .status(500)
       .json({ message: "Internal Server Error while sending message" });
+  }
+};
+
+exports.deleteMessage = async (req, res) => {
+  try {
+    const { id: messageId } = req.params;
+    const userId = req.user._id;
+
+    const message = await MessageModel.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Only sender can delete their message
+    if (String(message.senderId) !== String(userId)) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to delete this message" });
+    }
+
+    await MessageModel.findByIdAndDelete(messageId);
+
+    // Notify receiver via socket
+    const receiverSocketId = getReceiverSocketId(message.recipientId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("messageDeleted", { messageId });
+    }
+
+    res.json({ message: "Message deleted successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal Server Error while deleting message" });
   }
 };

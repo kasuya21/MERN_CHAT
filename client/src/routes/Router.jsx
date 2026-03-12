@@ -6,6 +6,7 @@ import Register from "../pages/Register";
 import { useAuthStore } from "../store/useAuthStore";
 import { Loader } from "lucide-react";
 import Profile from "../pages/Profile";
+import ThemePage from "../pages/Theme";
 
 const Router = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
@@ -36,6 +37,10 @@ const Router = () => {
         <Route
           path="/profile"
           element={authUser ? <Profile /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/settings"
+          element={authUser ? <ThemePage /> : <Navigate to="/login" />}
         />
       </Routes>
     </div>

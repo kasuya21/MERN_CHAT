@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-const CommunityPanel = () => {
+const CommunityPanel = React.memo(() => {
   return (
     <div className="hidden lg:flex w-1/2 bg-[#13161c] flex-col justify-center items-center p-12 relative overflow-hidden">
       {/* หัวใจเส้นวิ่ง */}
@@ -43,9 +43,11 @@ const CommunityPanel = () => {
         </p>
       </motion.div>
 
-      <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#0f1216] to-transparent pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-full h-1/3 bg-linear-to-t from-[#0f1216] to-transparent pointer-events-none"></div>
     </div>
   );
-};
+});
+
+CommunityPanel.displayName = "CommunityPanel";
 
 export default CommunityPanel;

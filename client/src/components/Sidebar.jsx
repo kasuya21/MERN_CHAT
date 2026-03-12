@@ -83,8 +83,15 @@ const Sidebar = () => {
               <div className="text-left">
                 <div className="text-sm font-medium">{user.fullname}</div>
 
-                <div className="text-xs text-slate-400">
-                  {onlineUsers.includes(user._id) ? "Online" : "Offline"}
+                <div className="flex items-center gap-1 text-xs text-slate-400">
+                  {onlineUsers.includes(user._id) ? (
+                    <>
+                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                      Active now
+                    </>
+                  ) : (
+                    "Offline"
+                  )}
                 </div>
               </div>
             </button>

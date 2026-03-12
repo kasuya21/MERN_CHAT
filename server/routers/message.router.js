@@ -5,11 +5,13 @@ const {
   getUsersForSidebar,
   sendMessage,
   getMessage,
+  deleteMessage,
 } = require("../controllers/message.controller");
 const { protectedRoute } = require("../middlewares/auth");
 
 router.get("/users", protectedRoute, getUsersForSidebar);
 router.get("/:id", protectedRoute, getMessage);
 router.post("/send/:id", protectedRoute, sendMessage);
+router.delete("/:id", protectedRoute, deleteMessage);
 
 module.exports = router;

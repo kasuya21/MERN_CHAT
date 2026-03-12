@@ -3,118 +3,153 @@ import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
-import MessageSkeleton from "./skeletons/MessageSkeleton"; // (Optional: ถ้ามี Skeleton loading)
 
 const ChatContainer = () => {
   const {
     messages,
-    getMessages,
-    isMessagesLoading,
+    getMessage,
+    isMessageLoading,
     selectedUser,
     subscribeToMessages,
+    subscribeToDeletedMessages,
     unsubscribeFromMessages,
   } = useChatStore();
+
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
 
   useEffect(() => {
-    // โหลดข้อความเมื่อเลือก User คนใหม่
-    getMessages(selectedUser._id);
+    if (!selectedUser) return;
 
-    // เชื่อมต่อ Socket เพื่อรับข้อความ Realtime
+    getMessage(selectedUser._id);
     subscribeToMessages();
+    subscribeToDeletedMessages();
 
-    // Cleanup เมื่อเปลี่ยน User หรือปิด Component
     return () => unsubscribeFromMessages();
-  }, [
-    selectedUser._id,
-    getMessages,
-    subscribeToMessages,
-    unsubscribeFromMessages,
-  ]);
+  }, [selectedUser]);
 
   useEffect(() => {
-    // เลื่อนลงล่างสุดเสมอเมื่อมีข้อความใหม่
-    if (messageEndRef.current && messages) {
-      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Loading State (แสดง Skeleton หรือ Loading ธรรมดา)
-  if (isMessagesLoading) {
+  if (!selectedUser) {
     return (
-      <div className="flex-1 flex flex-col overflow-auto bg-[#0f1216]">
+      <div className="flex-1 flex items-center justify-center text-gray-400">
+        Select a user to start chatting
+      </div>
+    );
+  }
+
+  if (isMessageLoading) {
+    return (
+      <div className="flex h-full flex-col bg-[#0f1216]">
         <ChatHeader />
+
         <div className="flex-1 flex items-center justify-center">
           <span className="loading loading-spinner text-orange-500"></span>
         </div>
+
         <MessageInput />
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-auto bg-[#0f1216]">
-      {/* 1. Header */}
-      <ChatHeader />
+    <div className="flex flex-col h-screen bg-[#0f1216] text-sm">
+      {/* HEADER */}
+      <div className="sticky top-0 z-20 bg-[#0f1216] border-b border-gray-800">
+        <ChatHeader />
+      </div>
 
-      {/* 2. Messages List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-        {messages.map((message) => (
-          <div
-            key={message._id}
-            className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
-          >
-            {/* Avatar */}
-            <div className="chat-image avatar">
-              <div className="size-10 rounded-full border border-gray-700">
-                <img
-                  src={
-                    message.senderId === authUser._id
-                      ? authUser.profilePic || "/avatar.png"
-                      : selectedUser.profilePic || "/avatar.png"
-                  }
-                  alt="profile pic"
-                />
-              </div>
-            </div>
+      {/* MESSAGE AREA */}
+      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4 scrollbar-thin scrollbar-thumb-gray-700">
+        {messages.map((message, index) => {
+          const isSender = String(message.senderId) === String(authUser._id);
 
-            {/* Time */}
-            <div className="chat-header mb-1">
-              <time className="text-xs opacity-50 ml-1 text-gray-400">
-                {new Date(message.createdAt).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </time>
-            </div>
-
-            {/* Bubble */}
+          return (
             <div
-              className={`chat-bubble flex flex-col ${
-                message.senderId === authUser._id
-                  ? "bg-[#ff7a50] text-black font-medium"
-                  : "bg-[#1e232b] text-white"
+              key={message._id || index}
+              className={`flex items-end gap-2 ${
+                isSender ? "justify-end" : "justify-start"
               }`}
             >
-              {message.image && (
+              {/* Avatar (receiver) */}
+              {!isSender && (
                 <img
-                  src={message.image}
-                  alt="Attachment"
-                  className="sm:max-w-[200px] rounded-md mb-2 object-cover border border-black/10"
+                  src={selectedUser.profilePic || "/avatar.png"}
+                  alt="avatar"
+                  className="w-8 h-8 rounded-full object-cover"
                 />
               )}
-              {message.text && <p>{message.text}</p>}
+
+              {/* Message Block */}
+              <div
+                className={`flex flex-col max-w-[75%] ${
+                  isSender ? "items-end" : "items-start"
+                }`}
+              >
+                {/* Sender Name */}
+                <span
+                  className={`text-xs text-gray-400 mb-1 ${
+                    isSender ? "text-right" : "text-left"
+                  }`}
+                >
+                  {isSender ? authUser.name : selectedUser.name}
+                </span>
+
+                {/* Bubble */}
+                <div
+                  className={`px-4 py-2 rounded-2xl text-sm shadow-md ${
+                    isSender
+                      ? "bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-br-md"
+                      : "bg-[#1f242c] text-gray-200 rounded-bl-md"
+                  }`}
+                >
+                  {message.file && (
+                    <img
+                      src={message.file}
+                      alt="attachment"
+                      className="rounded-lg mb-2 max-w-[220px] max-h-[220px] object-cover"
+                    />
+                  )}
+
+                  {message.text && (
+                    <p className="leading-relaxed">{message.text}</p>
+                  )}
+                </div>
+
+                {/* Time */}
+                {message.createdAt && (
+                  <span className="text-[10px] text-gray-400 mt-1">
+                    {new Date(message.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                )}
+              </div>
+
+              {/* Avatar (sender) */}
+              {isSender && (
+                <img
+                  src={authUser.profilePic || "/avatar.png"}
+                  alt="avatar"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              )}
             </div>
-          </div>
-        ))}
-        {/* Dummy div for auto scroll */}
+          );
+        })}
+
         <div ref={messageEndRef} />
       </div>
 
-      {/* 3. Input Area */}
-      <MessageInput />
+      {/* INPUT */}
+      <div className="sticky bottom-0 z-20 bg-[#0f1216] border-t border-gray-800">
+        <MessageInput />
+      </div>
     </div>
   );
 };
+
 export default ChatContainer;
